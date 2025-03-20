@@ -79,7 +79,7 @@ const handleRoomConnection = (event) => {
     return;
   }
 
-  socket.emit("sendVideo", roomId, getMediaStream);
+  socket.emit("send_room", roomId, getMediaStream);
   elements.roomIdInput.value = "";
 };
 

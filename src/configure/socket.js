@@ -4,12 +4,13 @@ const configureSocket = (server) => {
   const io = new Server(server);
 
   io.on("connection", (socket) => {
-    socket.onAny((event) => {
-      console.log(`${event}가 발생하였습니다.`);
+    socket.on("join_room", (roomId) => {
+      console.log(`join_room 이벤트를 받았습니다. 방번호: ${roomId}`);
+      socket.join(roomId);
     });
 
-    socket.on("sendVideo", (roomId, done) => {
-      console.log(`sendVideo 이벤트를 받았습니다. 방번호: ${roomId}`);
+    socket.on("send_room", (roomId, done) => {
+      console.log(`send-video 이벤트를 받았습니다. 방번호: ${roomId}`);
       socket.join(roomId);
 
       const { rooms, sids } = io.sockets.adapter;
