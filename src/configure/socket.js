@@ -22,7 +22,7 @@ const configureSocket = (server) => {
       });
 
       io.emit("room-list", activeRooms);
-      // done();
+      done();
     });
 
     socket.on("disconnect", () => {

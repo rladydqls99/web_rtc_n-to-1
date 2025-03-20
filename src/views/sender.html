@@ -15,22 +15,65 @@
       </h1>
     </header>
 
-    <main class="flex-grow flex items-center justify-center">
-      <form
-        id="room-connection-form"
-        class="w-full flex flex-row justify-center gap-4"
-      >
-        <input
-          class="py-3 px-2 rounded-lg shadow-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 ease-in-out text-gray-800"
-          placeholder="Room 이름을 입력해주세요."
-        />
-        <button
-          class="bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-8 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1"
-          type="submit"
+    <main class="flex-grow flex flex-col items-center justify-center">
+      <section>
+        <form
+          id="room-connection-form"
+          class="w-full flex flex-row justify-center gap-4"
         >
-          송신 시작
-        </button>
-      </form>
+          <input
+            class="py-3 px-2 rounded-lg shadow-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 ease-in-out text-gray-800"
+            placeholder="Room 이름을 입력해주세요."
+          />
+          <button
+            class="bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-8 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1"
+            type="submit"
+          >
+            송신 시작
+          </button>
+        </form>
+      </section>
+      <section id="stream-container" class="mt-8 w-full max-w-3xl mx-auto">
+        <div class="bg-white p-4 rounded-lg shadow-lg">
+          <div
+            class="relative bg-gray-900 rounded-lg overflow-hidden"
+            style="aspect-ratio: 16/9; width: 100%; max-width: 100%"
+          >
+            <video
+              id="local-stream"
+              class="absolute inset-0 w-full h-full object-cover"
+              autoplay
+              playsinline
+            ></video>
+
+            <select
+              id="camera-select"
+              class="absolute top-3 right-3 z-10 bg-gray-800 bg-opacity-70 text-white py-1 px-2 rounded-md text-sm border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+            >
+              <option value="">카메라 선택</option>
+            </select>
+          </div>
+          <div class="mt-4 flex justify-between items-center">
+            <div id="connection-status" class="text-sm text-gray-600">
+              연결 대기 중...
+            </div>
+            <div class="flex gap-2">
+              <button
+                id="audio-toggle"
+                class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md transition duration-300"
+              >
+                오디오 Off
+              </button>
+              <button
+                id="video-toggle"
+                class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md transition duration-300"
+              >
+                비디오 Off
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
 
     <footer class="p-6">
