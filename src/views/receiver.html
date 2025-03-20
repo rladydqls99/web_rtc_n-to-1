@@ -15,14 +15,15 @@
       </h1>
     </header>
 
-    <main class="flex-grow flex flex-col items-center justify-center p-4">
-      <div id="controls" class="mt-6">
-        <button
-          id="startReceiving"
-          class="bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-8 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1"
-        >
-          수신 시작
-        </button>
+    <main
+      class="w-full flex-grow flex flex-col items-center justify-center p-4"
+    >
+      <div
+        id="room-list-container"
+        class="w-full flex flex-col items-center gap-2"
+      >
+        <h2 class="text-3xl md:text-4xl font-semibold">Room List</h2>
+        <ul id="room-list" class="w-full flex flex-col gap-1"></ul>
       </div>
     </main>
 

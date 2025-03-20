@@ -15,15 +15,22 @@
       </h1>
     </header>
 
-    <main class="flex-grow flex flex-col items-center justify-center p-4">
-      <div id="controls" class="mt-6">
+    <main class="flex-grow flex items-center justify-center">
+      <form
+        id="room-connection-form"
+        class="w-full flex flex-row justify-center gap-4"
+      >
+        <input
+          class="py-3 px-2 rounded-lg shadow-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 ease-in-out text-gray-800"
+          placeholder="Room 이름을 입력해주세요."
+        />
         <button
-          id="startSending"
           class="bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-8 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1"
+          type="submit"
         >
           송신 시작
         </button>
-      </div>
+      </form>
     </main>
 
     <footer class="p-6">

@@ -6,7 +6,8 @@
     "node": "22.14.0"
   },
   "scripts": {
-    "dev": "nodemon"
+    "dev": "nodemon",
+    "tailwind": "pnpm exec tailwindcss -i ./src/public/css/style.css -o ./src/public/css/tailwind.css --watch"
   },
   "keywords": [],
   "author": "KYB",

@@ -4,7 +4,26 @@ const configureSocket = (server) => {
   const io = new Server(server);
 
   io.on("connection", (socket) => {
-    console.log("새로운 클라이언트 접속:", socket.id);
+    socket.onAny((event) => {
+      console.log(`${event}가 발생하였습니다.`);
+    });
+
+    socket.on("sendVideo", (roomId, done) => {
+      console.log(`sendVideo 이벤트를 받았습니다. 방번호: ${roomId}`);
+      socket.join(roomId);
+
+      const { rooms, sids } = io.sockets.adapter;
+
+      const activeRooms = [];
+      rooms.forEach((_, roomId) => {
+        if (!sids.has(roomId)) {
+          activeRooms.push(roomId);
+        }
+      });
+
+      io.emit("room-list", activeRooms);
+      // done();
+    });
 
     socket.on("disconnect", () => {
       console.log("클라이언트 접속 해제:", socket.id);

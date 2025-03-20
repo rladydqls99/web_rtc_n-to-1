@@ -1,1 +1,5 @@
 @import "tailwindcss";
+
+.room-card {
+  @apply bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow;
+}
