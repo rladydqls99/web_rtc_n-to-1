@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/css/tailwind.css" />
+    <title>Sender</title>
+  </head>
+  <body
+    class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col items-center justify-center"
+  >
+    <header class="p-4">
+      <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-8 text-center">
+        Sender
+      </h1>
+    </header>
+
+    <main class="flex-grow flex flex-col items-center justify-center p-4">
+      <div id="controls" class="mt-6">
+        <button
+          id="startSending"
+          class="bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-8 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1"
+        >
+          송신 시작
+        </button>
+      </div>
+    </main>
+
+    <footer class="p-6">
+      <div class="flex justify-center">
+        <a
+          href="/"
+          class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-8 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1"
+        >
+          메인으로 돌아가기
+        </a>
+      </div>
+    </footer>
+  </body>
+</html>
