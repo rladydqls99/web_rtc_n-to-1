@@ -1,123 +1,169 @@
-// Socket 연결 설정
-const socket = io();
+(function () {
+  "use strict";
 
-// DOM 요소
-const elements = {
-  roomList: document.getElementById("room-list"),
-  streamContainer: document.getElementById("stream-container"),
-  remoteVideo: document.querySelector("#stream-container video"),
-};
-
-// peer 상태 관리
-const peerState = {
-  peerConnections: {},
-};
-
-// 피어 연결 함수 ----------------------------------------------------------
-
-const createPeerConnection = async (senderSocketId) => {
-  const peerConnection = new RTCPeerConnection({
-    iceServers: [
+  const CONFIG = {
+    ICE_SERVERS: [
       { urls: "stun:stun.stunprotocol.org:3478" },
       { urls: "stun:stun.l.google.com:19302" },
     ],
-  });
+  };
 
-  peerConnection.onicecandidate = (event) => {
-    if (event.candidate) {
-      socket.emit("ice-candidate", {
-        socketId: senderSocketId,
-        iceCandidate: event.candidate,
+  const DOMElements = {
+    roomList: document.getElementById("room-list"),
+    streamContainer: document.getElementById("stream-container"),
+    remoteVideo: document.querySelector("#stream-container video"),
+
+    updateRooms(rooms) {
+      this.roomList.innerHTML = "";
+
+      if (rooms.length === 0) {
+        const li = document.createElement("li");
+        li.textContent = "No rooms available";
+        li.className = "room-card";
+        this.roomList.appendChild(li);
+        return;
+      }
+
+      rooms.forEach((room) => {
+        const li = document.createElement("li");
+        li.textContent = room;
+        li.className = "room-card";
+        li.addEventListener("click", () => RoomManager.joinRoom(room));
+        this.roomList.appendChild(li);
       });
-    }
+    },
+
+    setStreamVisibility(isVisible) {
+      this.streamContainer.hidden = !isVisible;
+    },
+
+    setRemoteStream(stream) {
+      this.remoteVideo.srcObject = stream;
+    },
   };
 
-  peerConnection.ontrack = (event) => {
-    const stream = event.streams[0];
+  const PeerConnectionManager = {
+    connections: {},
 
-    elements.remoteVideo.srcObject = stream;
+    async createConnection(senderSocketId) {
+      const peerConnection = new RTCPeerConnection({
+        iceServers: CONFIG.ICE_SERVERS,
+      });
+
+      peerConnection.onicecandidate = (event) => {
+        if (event.candidate) {
+          SocketManager.emitIceCandidate(senderSocketId, event.candidate);
+        }
+      };
+
+      peerConnection.ontrack = (event) => {
+        const stream = event.streams[0];
+        DOMElements.setRemoteStream(stream);
+      };
+
+      this.connections[senderSocketId] = peerConnection;
+      return peerConnection;
+    },
+
+    async addIceCandidate(socketId, candidate) {
+      const connection = this.connections[socketId];
+
+      if (connection) {
+        try {
+          await connection.addIceCandidate(candidate);
+        } catch (error) {
+          console.error(`ICE candidate 추가 중 에러가 발생했습니다: ${error}`);
+        }
+      }
+    },
+
+    async handleOffer(senderSocketId, sdp) {
+      const peerConnection = await this.createConnection(senderSocketId);
+
+      try {
+        await peerConnection.setRemoteDescription(sdp);
+        const answer = await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
+
+        SocketManager.emitAnswer(
+          senderSocketId,
+          peerConnection.localDescription
+        );
+      } catch (error) {
+        console.error(`Answer 생성 중 에러가 발생했습니다: ${error}`);
+      }
+    },
   };
 
-  peerState.peerConnections[senderSocketId] = peerConnection;
+  const SocketManager = {
+    socket: io(),
 
-  return peerConnection;
-};
+    init() {
+      this.registerEvents();
+      this.getRoomList();
+    },
 
-// 소켓 이벤트 ----------------------------------------------------------
-socket.on("offer", async ({ senderSocketId, sdp }) => {
-  const peerConnection = await createPeerConnection(senderSocketId);
+    registerEvents() {
+      // Offer 수신 처리
+      this.socket.on("offer", async ({ senderSocketId, sdp }) => {
+        await PeerConnectionManager.handleOffer(senderSocketId, sdp);
+      });
 
-  try {
-    await peerConnection.setRemoteDescription(sdp);
+      // ICE 후보 수신 처리
+      this.socket.on(
+        "ice-candidate",
+        async ({ targetSocketId, iceCandidate }) => {
+          await PeerConnectionManager.addIceCandidate(
+            targetSocketId,
+            iceCandidate
+          );
+        }
+      );
 
-    const answer = await peerConnection.createAnswer();
-    await peerConnection.setLocalDescription(answer);
+      // 방 목록 수신 처리
+      this.socket.on("room-list", (rooms) => {
+        DOMElements.updateRooms(rooms);
+      });
+    },
 
-    socket.emit("answer", {
-      senderSocketId,
-      sdp: peerConnection.localDescription,
-    });
-  } catch (error) {
-    console.error(`answer를 생성하는 도중 에러가 발생했습니다: ${error}`);
+    getRoomList() {
+      this.socket.emit("get-rooms");
+    },
+
+    joinRoom(roomId) {
+      this.socket.emit("join_room", roomId);
+    },
+
+    emitAnswer(senderSocketId, sdp) {
+      this.socket.emit("answer", {
+        senderSocketId,
+        sdp,
+      });
+    },
+
+    emitIceCandidate(socketId, candidate) {
+      this.socket.emit("ice-candidate", {
+        socketId,
+        iceCandidate: candidate,
+      });
+    },
+  };
+
+  const RoomManager = {
+    joinRoom(roomId) {
+      SocketManager.joinRoom(roomId);
+      DOMElements.setStreamVisibility(true);
+    },
+  };
+
+  function initApp() {
+    // 스트림 컨테이너 초기 상태 설정
+    DOMElements.setStreamVisibility(false);
+
+    // 소켓 통신 초기화
+    SocketManager.init();
   }
-});
 
-socket.on("ice-candidate", async ({ targetSocketId, iceCandidate }) => {
-  const peerConnection = peerState.peerConnections[targetSocketId];
-
-  if (peerConnection) {
-    try {
-      await peerConnection.addIceCandidate(iceCandidate);
-    } catch (error) {
-      console.error(`ICE candidate 추가 중 에러가 발생했습니다: ${error}`);
-    }
-  }
-});
-
-socket.on("room-list", (rooms) => {
-  updateRoomList(rooms);
-});
-
-// 핸들러 ----------------------------------------------------------
-
-const handleRoomClick = (roomId) => {
-  socket.emit("join_room", roomId);
-  elements.streamContainer.hidden = false;
-};
-
-// helper 함수 ----------------------------------------------------------
-
-const updateRoomList = (rooms) => {
-  elements.roomList.innerHTML = "";
-
-  if (rooms.length === 0) {
-    const li = document.createElement("li");
-    li.textContent = "No rooms available";
-    li.className = "room-card";
-    elements.roomList.appendChild(li);
-    return;
-  }
-
-  rooms.forEach((room) => {
-    const li = document.createElement("li");
-    li.textContent = room;
-    li.className = "room-card";
-    li.addEventListener("click", () => handleRoomClick(room));
-    elements.roomList.appendChild(li);
-  });
-};
-
-// 초기화 ----------------------------------------------------------
-
-const initSocketEvents = () => {};
-
-const init = () => {
-  elements.streamContainer.hidden = true;
-
-  socket.emit("get-rooms");
-
-  initSocketEvents();
-};
-
-// 초기화 실행
-init();
+  // 앱 시작
+  initApp();
+})();
