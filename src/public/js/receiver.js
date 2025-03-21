@@ -10,6 +10,7 @@
 
   const DOMElements = {
     roomList: document.getElementById("room-list"),
+    roomCount: document.getElementById("room-count"),
     streamContainer: document.getElementById("stream-container"),
     remoteVideo: document.querySelector("#stream-container video"),
 
@@ -31,6 +32,8 @@
         li.addEventListener("click", () => RoomManager.joinRoom(room));
         this.roomList.appendChild(li);
       });
+
+      this.roomCount.textContent = `${rooms.length} room`;
     },
 
     setStreamVisibility(isVisible) {
