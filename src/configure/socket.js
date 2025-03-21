@@ -32,6 +32,8 @@ const configureSocket = (server) => {
 
       io.in(roomId).socketsLeave(roomId);
 
+      io.emit("close_room", roomId);
+
       const activeRooms = getRooms(io);
       io.emit("room_list", activeRooms);
     });

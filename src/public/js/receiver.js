@@ -23,6 +23,7 @@
         li.textContent = "No rooms available";
         li.className = "room-card";
         this.roomList.appendChild(li);
+        this.roomCount.textContent = `${rooms.length} room`;
         return;
       }
 
@@ -141,6 +142,13 @@
       // 방 목록 수신 처리
       this.socket.on("room_list", (rooms) => {
         DOMElements.updateRooms(rooms);
+      });
+
+      this.socket.on("close_room", (roomId) => {
+        if (RoomManager.roomId === roomId) {
+          DOMElements.resetStream();
+          PeerConnectionManager.disConnectPeerConnection(this.roomId);
+        }
       });
     },
 
