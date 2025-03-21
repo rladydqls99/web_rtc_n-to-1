@@ -11,6 +11,7 @@
   const DOMElements = {
     roomConnectionForm: document.getElementById("room-connection-form"),
     roomIdInput: document.querySelector("#room-connection-form input"),
+    disConnectButton: document.getElementById("disconnect-button"),
     streamContainer: document.getElementById("stream-container"),
     localVideo: document.querySelector("#stream-container video"),
     cameraSelect: document.querySelector("#stream-container select"),
@@ -30,6 +31,18 @@
 
     setLocalStream(stream) {
       this.localVideo.srcObject = stream;
+    },
+
+    setDisConnectButtonVisibility(isVisible) {
+      this.disConnectButton.hidden = !isVisible;
+    },
+
+    setRoomConnectionFormVisibility(isVisible) {
+      this.roomConnectionForm.hidden = !isVisible;
+    },
+
+    resetRoomIdInputValue() {
+      this.roomIdInput.value = "";
     },
 
     updateAudioButtonText(isMuted) {
@@ -149,6 +162,12 @@
       return peerConnection;
     },
 
+    disConnectPeerConnection() {
+      Object.values(this.peerConnections).forEach((peerConnection) => {
+        peerConnection.close();
+      });
+    },
+
     async handleJoinRoom({ receiverSocketId }) {
       const peerConnection = this.createConnection(receiverSocketId);
 
@@ -210,6 +229,10 @@
       this.socket.emit("send_room", roomId);
     },
 
+    emitCloseRoom(roomId) {
+      this.socket.emit("close_room", roomId);
+    },
+
     emitOffer(receiverSocketId, sdp) {
       this.socket.emit("offer", {
         receiverSocketId,
@@ -226,18 +249,31 @@
   };
 
   const RoomManager = {
+    roomId: "",
+
     handleRoomConnection(event) {
       event.preventDefault();
 
-      const roomId = DOMElements.roomIdInput.value.trim();
+      this.roomId = DOMElements.roomIdInput.value.trim();
 
-      if (!roomId) {
+      if (!this.roomId) {
         alert("방 ID를 입력해주세요.");
         return;
       }
 
-      SocketManager.emitRoomJoin(roomId);
-      DOMElements.roomIdInput.value = "";
+      SocketManager.emitRoomJoin(this.roomId);
+
+      DOMElements.setRoomConnectionFormVisibility(false);
+      DOMElements.setDisConnectButtonVisibility(true);
+      DOMElements.resetRoomIdInputValue();
+    },
+
+    handleRoomDisconnection() {
+      SocketManager.emitCloseRoom(this.roomId);
+      PeerConnectionManager.disConnectPeerConnection();
+
+      DOMElements.setRoomConnectionFormVisibility(true);
+      DOMElements.setDisConnectButtonVisibility(false);
     },
   };
 
@@ -258,10 +294,17 @@
       DOMElements.cameraSelect.addEventListener("change", () =>
         MediaManager.changeCamera()
       );
+
+      DOMElements.disConnectButton.addEventListener("click", () => {
+        RoomManager.handleRoomDisconnection();
+      });
     },
   };
 
   async function initApp() {
+    // Dom 초기화
+    DOMElements.setDisConnectButtonVisibility(false);
+
     // 미디어 스트림 초기화
     await MediaManager.getMediaStream();
 

@@ -12,17 +12,34 @@ const configureSocket = (server) => {
     });
 
     socket.on("send_room", (roomId) => {
-      console.log(`send-video 이벤트를 받았습니다. 방번호: ${roomId}`);
+      console.log(`send_video 이벤트를 받았습니다. 방번호: ${roomId}`);
+
       socket.join(roomId);
 
       const activeRooms = getRooms(io);
-
-      io.emit("room-list", activeRooms);
+      io.emit("room_list", activeRooms);
     });
 
-    socket.on("get-rooms", () => {
+    socket.on("get_rooms", () => {
+      console.log("get_rooms 이벤트를 받았습니다.");
+
       const activeRooms = getRooms(io);
-      socket.emit("room-list", activeRooms);
+      socket.emit("room_list", activeRooms);
+    });
+
+    socket.on("close_room", (roomId) => {
+      console.log(`close_room 이벤트를 받았습니다. 방번호: ${roomId}`);
+
+      io.in(roomId).socketsLeave(roomId);
+
+      const activeRooms = getRooms(io);
+      io.emit("room_list", activeRooms);
+    });
+
+    socket.on("leave_room", (roomId) => {
+      console.log(`leave_room 이벤트를 받았습니다. 방번호: ${roomId}`);
+
+      socket.leave(roomId);
     });
 
     socket.on("offer", ({ receiverSocketId, sdp }) => {
@@ -43,6 +60,8 @@ const configureSocket = (server) => {
     });
 
     socket.on("ice-candidate", ({ socketId, iceCandidate }) => {
+      console.log(`ice-candidate 이벤트를 받았습니다. 대상: ${socketId}`);
+
       socket.to(socketId).emit("ice-candidate", {
         targetSocketId: socket.id,
         iceCandidate,

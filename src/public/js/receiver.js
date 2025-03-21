@@ -13,6 +13,7 @@
     roomCount: document.getElementById("room-count"),
     streamContainer: document.getElementById("stream-container"),
     remoteVideo: document.querySelector("#stream-container video"),
+    disConnectButton: document.getElementById("disconnect-button"),
 
     updateRooms(rooms) {
       this.roomList.innerHTML = "";
@@ -29,7 +30,7 @@
         const li = document.createElement("li");
         li.textContent = room;
         li.className = "room-card";
-        li.addEventListener("click", () => RoomManager.joinRoom(room));
+        li.addEventListener("click", () => RoomManager.handleJoinRoom(room));
         this.roomList.appendChild(li);
       });
 
@@ -43,10 +44,15 @@
     setRemoteStream(stream) {
       this.remoteVideo.srcObject = stream;
     },
+
+    resetStream() {
+      this.remoteVideo.srcObject = null;
+      this.streamContainer.hidden = true;
+    },
   };
 
   const PeerConnectionManager = {
-    connections: {},
+    peerConnections: {},
 
     async createConnection(senderSocketId) {
       const peerConnection = new RTCPeerConnection({
@@ -64,12 +70,21 @@
         DOMElements.setRemoteStream(stream);
       };
 
-      this.connections[senderSocketId] = peerConnection;
+      this.peerConnections[senderSocketId] = peerConnection;
       return peerConnection;
     },
 
+    disConnectPeerConnection(socketId) {
+      const connection = this.peerConnections[socketId];
+
+      if (connection) {
+        connection.close();
+        delete this.peerConnections[socketId];
+      }
+    },
+
     async addIceCandidate(socketId, candidate) {
-      const connection = this.connections[socketId];
+      const connection = this.peerConnections[socketId];
 
       if (connection) {
         try {
@@ -124,17 +139,21 @@
       );
 
       // 방 목록 수신 처리
-      this.socket.on("room-list", (rooms) => {
+      this.socket.on("room_list", (rooms) => {
         DOMElements.updateRooms(rooms);
       });
     },
 
     getRoomList() {
-      this.socket.emit("get-rooms");
+      this.socket.emit("get_rooms");
     },
 
     joinRoom(roomId) {
       this.socket.emit("join_room", roomId);
+    },
+
+    emitLeaveRoom(roomId) {
+      this.socket.emit("leave_room", roomId);
     },
 
     emitAnswer(senderSocketId, sdp) {
@@ -153,18 +172,40 @@
   };
 
   const RoomManager = {
-    joinRoom(roomId) {
+    roomId: "",
+
+    handleJoinRoom(roomId) {
+      this.roomId = roomId;
+
       SocketManager.joinRoom(roomId);
       DOMElements.setStreamVisibility(true);
     },
+
+    handleLeaveRoom() {
+      SocketManager.emitLeaveRoom(this.roomId);
+      DOMElements.resetStream();
+      PeerConnectionManager.disConnectPeerConnection(this.roomId);
+
+      this.roomId = "";
+    },
   };
 
+  const EventManager = {
+    init() {
+      DOMElements.disConnectButton.addEventListener("click", () =>
+        RoomManager.handleLeaveRoom()
+      );
+    },
+  };
   function initApp() {
     // 스트림 컨테이너 초기 상태 설정
     DOMElements.setStreamVisibility(false);
 
     // 소켓 통신 초기화
     SocketManager.init();
+
+    // 이벤트 초기화
+    EventManager.init();
   }
 
   // 앱 시작
