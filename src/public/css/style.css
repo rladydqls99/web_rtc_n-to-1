@@ -3,3 +3,7 @@
 .room-card {
   @apply bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow;
 }
+
+.video {
+  @apply rotate-y-180;
+}

@@ -4,36 +4,96 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="/css/tailwind.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <title>Receiver</title>
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+      }
+    </style>
   </head>
   <body
-    class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col items-center justify-center"
+    class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col"
   >
-    <header class="p-4">
-      <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-8 text-center">
-        Receiver
+    <header class="py-8 px-6">
+      <h1 class="text-3xl font-medium text-slate-800 text-center">
+        <span class="font-semibold text-indigo-600">Receiver</span> Dashboard
       </h1>
     </header>
 
-    <main
-      class="w-full flex-grow flex flex-col items-center justify-center p-4"
-    >
-      <div
-        id="room-list-container"
-        class="w-full flex flex-col items-center gap-2"
-      >
-        <h2 class="text-3xl md:text-4xl font-semibold">Room List</h2>
-        <ul id="room-list" class="w-full flex flex-col gap-1"></ul>
+    <main class="flex-grow container mx-auto px-4 md:px-6 py-4 max-w-5xl">
+      <div class="grid md:grid-cols-5 gap-8">
+        <!-- Room List Section -->
+        <section
+          id="room-list-container"
+          class="md:col-span-2 flex flex-col gap-4"
+        >
+          <div class="flex items-center justify-between">
+            <h2 class="text-xl font-medium text-slate-700">Available Rooms</h2>
+            <span
+              class="px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-medium rounded-full"
+              id="room-count"
+              >0 rooms</span
+            >
+          </div>
+
+          <div
+            class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden"
+          >
+            <ul id="room-list" class="divide-y divide-slate-100"></ul>
+          </div>
+        </section>
+
+        <!-- Video Stream Section -->
+        <section id="stream-container" class="md:col-span-3">
+          <div
+            class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden"
+          >
+            <div class="p-4 border-b border-slate-100">
+              <h2 class="text-lg font-medium text-slate-700">Live Stream</h2>
+            </div>
+            <div class="p-4">
+              <div
+                class="relative bg-slate-900 rounded-lg overflow-hidden"
+                style="aspect-ratio: 16/9"
+              >
+                <video
+                  id="local-stream"
+                  class="video absolute inset-0 w-full h-full object-cover"
+                  autoplay
+                  playsinline
+                ></video>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
     </main>
 
-    <footer class="p-6">
+    <footer class="p-6 mt-auto">
       <div class="flex justify-center">
         <a
           href="/"
-          class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-8 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1"
+          class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 px-5 rounded-lg transition duration-200 flex items-center gap-2"
         >
-          메인으로 돌아가기
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+          Return to Main
         </a>
       </div>
     </footer>

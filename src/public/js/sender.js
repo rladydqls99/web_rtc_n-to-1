@@ -22,9 +22,11 @@ const mediaState = {
   stream: null,
   isMuted: false,
   isCameraOff: false,
+  peerConnections: {},
 };
 
-// 미디어 구성 옵션
+// 미디어 구성 함수 ----------------------------------------------------------
+
 const getMediaConfig = (deviceId) => {
   if (deviceId) {
     return { audio: true, video: { deviceId: { exact: deviceId } } };
@@ -59,15 +61,83 @@ const getMediaStream = async (deviceId) => {
 
     if (!deviceId) {
       getCameras();
-      elements.connectionStatus.textContent = "연결완료";
+      elements.connectionStatus.textContent = "Connected";
     }
 
     elements.localVideo.srcObject = mediaState.stream;
   } catch (error) {
     console.error(`미디어를 가져오는 도중 에러가 발생했습니다: ${error}`);
-    elements.connectionStatus.textContent = "연결실패";
+    elements.connectionStatus.textContent = "Failed to connect";
   }
 };
+
+const createPeerConnection = (receiverSocketId) => {
+  const peerConnection = new RTCPeerConnection({
+    iceServers: [
+      { urls: "stun:stun.stunprotocol.org:3478" },
+      { urls: "stun:stun.l.google.com:19302" },
+    ],
+  });
+
+  const localStream = mediaState.stream.getTracks();
+  localStream.forEach((track) =>
+    peerConnection.addTrack(track, mediaState.stream)
+  );
+
+  peerConnection.onicecandidate = (event) => {
+    if (event.candidate) {
+      socket.emit("ice-candidate", {
+        socketId: receiverSocketId,
+        iceCandidate: event.candidate,
+      });
+    }
+  };
+
+  mediaState.peerConnections[receiverSocketId] = peerConnection;
+
+  return peerConnection;
+};
+
+// 소켓 이벤트 ----------------------------------------------------------
+
+socket.on("join_room", async ({ receiverSocketId }) => {
+  const peerConnection = createPeerConnection(receiverSocketId);
+
+  try {
+    const offer = await peerConnection.createOffer();
+    await peerConnection.setLocalDescription(offer);
+
+    socket.emit("offer", {
+      receiverSocketId,
+      sdp: peerConnection.localDescription,
+    });
+  } catch (error) {
+    console.error(`offer를 생성하는 도중 에러가 발생했습니다: ${error}`);
+  }
+});
+
+socket.on("answer", async ({ receiverSocketId, sdp }) => {
+  try {
+    const peerConnection = mediaState.peerConnections[receiverSocketId];
+    await peerConnection.setRemoteDescription(sdp);
+  } catch (error) {
+    console.error(`answer를 처리하는 도중 에러가 발생했습니다: ${error}`);
+  }
+});
+
+socket.on("ice-candidate", async ({ targetSocketId, iceCandidate }) => {
+  const peerConnection = mediaState.peerConnections[targetSocketId];
+
+  if (peerConnection) {
+    try {
+      await peerConnection.addIceCandidate(iceCandidate);
+    } catch (error) {
+      console.error(`ICE candidate 추가 중 에러가 발생했습니다: ${error}`);
+    }
+  }
+});
+
+// 핸들러 ----------------------------------------------------------
 
 const handleRoomConnection = (event) => {
   event.preventDefault();
@@ -92,8 +162,8 @@ const handleMuteToggle = () => {
   });
 
   elements.audioToggle.textContent = mediaState.isMuted
-    ? "오디오 Off"
-    : "오디오 On";
+    ? "Audio Off"
+    : "Audio On";
   mediaState.isMuted = !mediaState.isMuted;
 };
 
@@ -112,8 +182,8 @@ const handleCameraOffToggle = () => {
   });
 
   elements.videoToggle.textContent = mediaState.isCameraOff
-    ? "비디오 Off"
-    : "비디오 On";
+    ? "Video Off"
+    : "Video On";
   mediaState.isCameraOff = !mediaState.isCameraOff;
 };
 
@@ -123,6 +193,8 @@ const initEventListeners = () => {
   elements.videoToggle.addEventListener("click", handleCameraOffToggle);
   elements.cameraSelect.addEventListener("change", handleCameraChange);
 };
+
+// 초기화 ----------------------------------------------------------
 
 const init = () => {
   initEventListeners();

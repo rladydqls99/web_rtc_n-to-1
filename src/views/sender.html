@@ -4,85 +4,115 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="/css/tailwind.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <title>Sender</title>
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+      }
+    </style>
   </head>
   <body
-    class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col items-center justify-center"
+    class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col"
   >
-    <header class="p-4">
-      <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-8 text-center">
-        Sender
+    <header class="py-8 px-6">
+      <h1 class="text-3xl font-medium text-slate-800 text-center">
+        <span class="font-semibold text-indigo-600">Sender</span> Dashboard
       </h1>
     </header>
 
-    <main class="flex-grow flex flex-col items-center justify-center">
-      <section>
+    <main class="flex-grow container mx-auto px-4 md:px-6 py-4 max-w-5xl">
+      <section class="mb-8">
         <form
           id="room-connection-form"
-          class="w-full flex flex-row justify-center gap-4"
+          class="flex flex-row justify-center gap-4"
         >
           <input
-            class="py-3 px-2 rounded-lg shadow-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 ease-in-out text-gray-800"
+            class="py-3 px-4 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200 text-slate-800"
             placeholder="Room 이름을 입력해주세요."
           />
           <button
-            class="bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-8 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1"
+            class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-6 rounded-lg transition duration-200"
             type="submit"
           >
-            송신 시작
+            Send Video
           </button>
         </form>
       </section>
-      <section id="stream-container" class="mt-8 w-full max-w-3xl mx-auto">
-        <div class="bg-white p-4 rounded-lg shadow-lg">
-          <div
-            class="relative bg-gray-900 rounded-lg overflow-hidden"
-            style="aspect-ratio: 16/9; width: 100%; max-width: 100%"
-          >
-            <video
-              id="local-stream"
-              class="absolute inset-0 w-full h-full object-cover"
-              autoplay
-              playsinline
-            ></video>
 
-            <select
-              id="camera-select"
-              class="absolute top-3 right-3 z-10 bg-gray-800 bg-opacity-70 text-white py-1 px-2 rounded-md text-sm border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-            >
-              <option value="">카메라 선택</option>
-            </select>
+      <section id="stream-container">
+        <div
+          class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden"
+        >
+          <div class="p-4 border-b border-slate-100">
+            <h2 class="text-lg font-medium text-slate-700">Live Stream</h2>
           </div>
-          <div class="mt-4 flex justify-between items-center">
-            <div id="connection-status" class="text-sm text-gray-600">
-              연결 대기 중...
+          <div class="p-4">
+            <div
+              class="relative bg-slate-900 rounded-lg overflow-hidden"
+              style="aspect-ratio: 16/9"
+            >
+              <video
+                id="local-stream"
+                class="video absolute inset-0 w-full h-full object-cover"
+                autoplay
+                playsinline
+              ></video>
+              <select
+                id="camera-select"
+                class="absolute top-3 right-3 z-10 bg-gray-800 bg-opacity-70 text-white py-1 px-2 rounded-md text-sm border border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+              >
+                <option value="">Select Camera</option>
+              </select>
             </div>
-            <div class="flex gap-2">
-              <button
-                id="audio-toggle"
-                class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md transition duration-300"
-              >
-                오디오 Off
-              </button>
-              <button
-                id="video-toggle"
-                class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md transition duration-300"
-              >
-                비디오 Off
-              </button>
+            <div class="mt-4 flex justify-between items-center">
+              <div id="connection-status" class="text-sm text-slate-600">
+                Waiting for connection...
+              </div>
+              <div class="flex gap-2">
+                <button
+                  id="audio-toggle"
+                  class="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-md transition duration-200"
+                >
+                  Audio Off
+                </button>
+                <button
+                  id="video-toggle"
+                  class="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-md transition duration-200"
+                >
+                  Video Off
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </section>
     </main>
 
-    <footer class="p-6">
+    <footer class="p-6 mt-auto">
       <div class="flex justify-center">
         <a
           href="/"
-          class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-8 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1"
+          class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 px-5 rounded-lg transition duration-200 flex items-center gap-2"
         >
-          메인으로 돌아가기
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+          Return to Main
         </a>
       </div>
     </footer>
