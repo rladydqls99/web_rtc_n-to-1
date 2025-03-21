@@ -144,7 +144,7 @@ const handleRoomConnection = (event) => {
     return;
   }
 
-  socket.emit("send_room", roomId, getMediaStream);
+  socket.emit("send_room", roomId);
   elements.roomIdInput.value = "";
 };
 
@@ -162,10 +162,20 @@ const handleMuteToggle = () => {
   mediaState.isMuted = !mediaState.isMuted;
 };
 
-const handleCameraChange = () => {
+const handleCameraChange = async () => {
   const deviceId = elements.cameraSelect.value;
 
-  getMediaStream(deviceId);
+  await getMediaStream(deviceId);
+
+  const videoTrack = mediaState.stream.getVideoTracks()[0];
+
+  Object.entries(mediaState.peerConnections).forEach(([_, peerConnection]) => {
+    const currentVideo = peerConnection
+      .getSenders()
+      .find((sender) => sender.track.kind === "video");
+
+    currentVideo.replaceTrack(videoTrack);
+  });
 };
 
 const handleCameraOffToggle = () => {
@@ -191,9 +201,9 @@ const initEventListeners = () => {
 
 // 초기화 ----------------------------------------------------------
 
-const init = () => {
+const init = async () => {
   initEventListeners();
-  getMediaStream();
+  await getMediaStream();
 };
 
 init();

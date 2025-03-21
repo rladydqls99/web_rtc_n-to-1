@@ -11,14 +11,13 @@ const configureSocket = (server) => {
       socket.to(roomId).emit("join_room", { receiverSocketId: socket.id });
     });
 
-    socket.on("send_room", (roomId, done) => {
+    socket.on("send_room", (roomId) => {
       console.log(`send-video 이벤트를 받았습니다. 방번호: ${roomId}`);
       socket.join(roomId);
 
       const activeRooms = getRooms(io);
 
       io.emit("room-list", activeRooms);
-      done();
     });
 
     socket.on("get-rooms", () => {
