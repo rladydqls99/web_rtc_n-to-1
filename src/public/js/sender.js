@@ -9,9 +9,6 @@ const elements = {
   streamContainer: document.getElementById("stream-container"),
   localVideo: document.querySelector("#stream-container video"),
   cameraSelect: document.querySelector("#stream-container select"),
-  connectionStatus: document.querySelector(
-    "#stream-container #connection-status"
-  ),
 
   audioToggle: document.getElementById("audio-toggle"),
   videoToggle: document.getElementById("video-toggle"),
@@ -61,13 +58,11 @@ const getMediaStream = async (deviceId) => {
 
     if (!deviceId) {
       getCameras();
-      elements.connectionStatus.textContent = "Connected";
     }
 
     elements.localVideo.srcObject = mediaState.stream;
   } catch (error) {
     console.error(`미디어를 가져오는 도중 에러가 발생했습니다: ${error}`);
-    elements.connectionStatus.textContent = "Failed to connect";
   }
 };
 
@@ -198,6 +193,7 @@ const initEventListeners = () => {
 
 const init = () => {
   initEventListeners();
+  getMediaStream();
 };
 
 init();
