@@ -7,7 +7,8 @@
   },
   "scripts": {
     "dev": "nodemon",
-    "tailwind": "pnpm exec tailwindcss -i ./src/public/css/style.css -o ./src/public/css/tailwind.css --watch"
+    "tailwind": "pnpm exec tailwindcss -i ./src/public/css/style.css -o ./src/public/css/tailwind.css --watch",
+    "localtunnel": "lt --port 3000"
   },
   "keywords": [],
   "author": "KYB",
