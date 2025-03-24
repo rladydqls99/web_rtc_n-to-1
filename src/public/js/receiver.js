@@ -6,6 +6,10 @@
       { urls: "stun:stun.stunprotocol.org:3478" },
       { urls: "stun:stun.l.google.com:19302" },
     ],
+    LOCATION: {
+      latitude: 36.38516688369645,
+      longitude: 127.3194762861434,
+    },
   };
 
   const DOMElements = {
@@ -14,6 +18,7 @@
     streamContainer: document.getElementById("stream-container"),
     remoteVideo: document.querySelector("#stream-container video"),
     disConnectButton: document.getElementById("disconnect-button"),
+    mapContainer: document.getElementById("map"),
 
     updateRooms(rooms) {
       this.roomList.innerHTML = "";
@@ -24,15 +29,21 @@
         li.className = "room-card";
         this.roomList.appendChild(li);
         this.roomCount.textContent = `${rooms.length} room`;
+
+        MapManager.updataMapMarker(rooms);
         return;
       }
 
       rooms.forEach((room) => {
         const li = document.createElement("li");
-        li.textContent = room;
+        li.textContent = room.roomId;
         li.className = "room-card";
-        li.addEventListener("click", () => RoomManager.handleJoinRoom(room));
+        li.addEventListener("click", () =>
+          RoomManager.handleJoinRoom(room.roomId)
+        );
         this.roomList.appendChild(li);
+
+        MapManager.updataMapMarker(rooms);
       });
 
       this.roomCount.textContent = `${rooms.length} room`;
@@ -49,6 +60,44 @@
     resetStream() {
       this.remoteVideo.srcObject = null;
       this.streamContainer.hidden = true;
+    },
+  };
+
+  const MapManager = {
+    map: null,
+    markers: new Map(),
+
+    initializeMap() {
+      const { latitude, longitude } = CONFIG.LOCATION;
+      const mapOptions = {
+        center: new kakao.maps.LatLng(latitude, longitude),
+        level: 4,
+      };
+
+      this.map = new kakao.maps.Map(DOMElements.mapContainer, mapOptions);
+      return map;
+    },
+
+    updataMapMarker(rooms) {
+      this.markers.forEach((marker) => marker.setMap(null));
+      this.markers.clear();
+
+      rooms.forEach((room) => {
+        const { latitude, longitude } = room.location;
+        const markerPosition = new kakao.maps.LatLng(latitude, longitude);
+
+        const marker = new kakao.maps.Marker({
+          position: markerPosition,
+        });
+
+        this.markers.set(room.roomId, marker);
+        marker.setMap(this.map);
+      });
+    },
+
+    resetMapMarker() {
+      this.markers.forEach((marker) => marker.setMap(null));
+      this.markers.clear();
     },
   };
 
@@ -181,6 +230,7 @@
 
   const RoomManager = {
     roomId: "",
+    location: null,
 
     handleJoinRoom(roomId) {
       this.roomId = roomId;
@@ -208,6 +258,7 @@
   function initApp() {
     // 스트림 컨테이너 초기 상태 설정
     DOMElements.setStreamVisibility(false);
+    MapManager.initializeMap();
 
     // 소켓 통신 초기화
     SocketManager.init();

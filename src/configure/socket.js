@@ -25,6 +25,7 @@ const SOCKET_EVENTS = {
 class RoomService {
   constructor(io) {
     this.io = io;
+    this.rooms = new Map();
   }
 
   joinRoom(socket, roomId) {
@@ -34,8 +35,9 @@ class RoomService {
       .emit(SOCKET_EVENTS.JOIN_ROOM, { receiverSocketId: socket.id });
   }
 
-  createRoom(socket, roomId) {
+  createRoom(socket, roomId, location) {
     socket.join(roomId);
+    this.rooms.set(roomId, location);
   }
 
   leaveRoom(socket, roomId) {
@@ -69,7 +71,9 @@ class RoomService {
 
     rooms.forEach((_, roomId) => {
       if (!sids.has(roomId)) {
-        activeRooms.push(roomId);
+        const room = this.rooms.get(roomId);
+
+        activeRooms.push({ roomId, location: room });
       }
     });
 
@@ -157,10 +161,10 @@ const setupRoomEventHandlers = (socket, io, roomService, logger) => {
     roomService.notifyRoomMemberCount(roomId);
   });
 
-  socket.on(SOCKET_EVENTS.SEND_ROOM, (roomId) => {
+  socket.on(SOCKET_EVENTS.SEND_ROOM, ({ roomId, location }) => {
     logger.logEvent(SOCKET_EVENTS.SEND_ROOM, roomId);
 
-    roomService.createRoom(socket, roomId);
+    roomService.createRoom(socket, roomId, location);
     roomService.setHost(socket);
     roomService.notifyActiveRooms();
   });

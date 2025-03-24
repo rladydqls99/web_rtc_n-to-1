@@ -233,8 +233,8 @@
       );
     },
 
-    emitRoomJoin(roomId) {
-      this.socket.emit("send_room", roomId);
+    emitRoomJoin(roomId, location) {
+      this.socket.emit("send_room", { roomId, location });
     },
 
     emitCloseRoom(roomId) {
@@ -258,8 +258,9 @@
 
   const RoomManager = {
     roomId: "",
+    currentPosition: null,
 
-    handleRoomConnection(event) {
+    async handleRoomConnection(event) {
       event.preventDefault();
 
       this.roomId = DOMElements.roomIdInput.value.trim();
@@ -269,7 +270,8 @@
         return;
       }
 
-      SocketManager.emitRoomJoin(this.roomId);
+      this.currentPosition = await LocationManager.getCurrentPosition();
+      SocketManager.emitRoomJoin(this.roomId, this.currentPosition);
 
       DOMElements.setRoomConnectionFormVisibility(false);
       DOMElements.setDisConnectButtonVisibility(true);
@@ -282,6 +284,29 @@
 
       DOMElements.setRoomConnectionFormVisibility(true);
       DOMElements.setDisConnectButtonVisibility(false);
+    },
+  };
+  const LocationManager = {
+    currentPosition: null,
+
+    async getCurrentPosition() {
+      try {
+        const currentPosition = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject);
+        });
+
+        this.currentPosition = {
+          latitude: currentPosition.coords.latitude,
+          longitude: currentPosition.coords.longitude,
+        };
+
+        return this.currentPosition;
+      } catch (error) {
+        console.error(
+          `위치 정보를 가져오는 도중 에러가 발생했습니다: ${error}`
+        );
+        return null;
+      }
     },
   };
 
