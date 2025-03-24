@@ -20,7 +20,6 @@ const CONFIG = {
 class DOMManager {
   constructor() {
     this.elements = {
-      roomList: document.getElementById("room-list"),
       roomCount: document.getElementById("room-count"),
       streamContainer: document.getElementById("stream-container"),
       remoteVideo: document.querySelector("#stream-container video"),
@@ -42,37 +41,17 @@ class DOMManager {
    * @param {Array} rooms - 사용 가능한 방 목록
    */
   updateRooms(rooms) {
-    const { roomList, roomCount } = this.elements;
-    roomList.innerHTML = "";
-
-    if (rooms.length === 0) {
-      const li = document.createElement("li");
-
-      li.textContent = "No rooms available";
-      li.className = "room-card";
-
-      roomList.appendChild(li);
-      roomCount.textContent = `${rooms.length} room`;
-
-      MapManager.clearMarkers();
-      return;
-    }
-
-    rooms.forEach((room) => {
-      const li = document.createElement("li");
-
-      li.textContent = room.roomId;
-      li.className = "room-card";
-
-      li.addEventListener("click", () => RoomManager.joinRoom(room.roomId));
-      roomList.appendChild(li);
-    });
+    const { roomCount } = this.elements;
 
     roomCount.textContent = `${rooms.length} ${
-      rooms.length === 1 ? "room" : "rooms"
+      rooms.length < 1 ? "room" : "rooms"
     }`;
 
-    MapManager.updateMarkers(rooms);
+    if (rooms.length === 0) {
+      MapManager.clearMarkers();
+    } else {
+      MapManager.updateMarkers(rooms);
+    }
   }
 
   /**

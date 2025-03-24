@@ -31,22 +31,12 @@
           id="room-list-container"
           class="md:col-span-2 flex flex-col gap-4"
         >
-          <div class="flex items-center justify-between">
-            <h2 class="text-xl font-medium text-slate-700">Available Rooms</h2>
+          <div class="flex items-center justify-end">
             <span
               class="px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-medium rounded-full"
               id="room-count"
-              >0 rooms</span
+              >0 room</span
             >
-          </div>
-
-          <div
-            class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden"
-          >
-            <ul
-              id="room-list"
-              class="flex flex-col gap-3 divide-y divide-slate-100"
-            ></ul>
           </div>
         </section>
 
@@ -83,7 +73,11 @@
         </section>
 
         <!-- Map Section -->
-        <section id="map" style="width: 100%; height: 400px"></section>
+        <section
+          class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden"
+        >
+          <div id="map" style="width: 100%; height: 400px"></div>
+        </section>
       </div>
     </main>
 
