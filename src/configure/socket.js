@@ -1,5 +1,27 @@
 import { Server } from "socket.io";
 
+// Event constants
+const SOCKET_EVENTS = {
+  // Connection events
+  CONNECTION: "connection",
+  DISCONNECT: "disconnect",
+  DISCONNECTING: "disconnecting",
+
+  // Room events
+  JOIN_ROOM: "join_room",
+  SEND_ROOM: "send_room",
+  GET_ROOMS: "get_rooms",
+  CLOSE_ROOM: "close_room",
+  LEAVE_ROOM: "leave_room",
+  ROOM_MEMBER_COUNT: "room_member_count",
+  ROOM_LIST: "room_list",
+
+  // WebRTC signaling events
+  OFFER: "offer",
+  ANSWER: "answer",
+  ICE_CANDIDATE: "ice-candidate",
+};
+
 class RoomService {
   constructor(io) {
     this.io = io;
@@ -7,7 +29,9 @@ class RoomService {
 
   joinRoom(socket, roomId) {
     socket.join(roomId);
-    socket.to(roomId).emit("join_room", { receiverSocketId: socket.id });
+    socket
+      .to(roomId)
+      .emit(SOCKET_EVENTS.JOIN_ROOM, { receiverSocketId: socket.id });
   }
 
   createRoom(socket, roomId) {
@@ -20,17 +44,23 @@ class RoomService {
 
   closeRoom(roomId) {
     this.io.in(roomId).socketsLeave(roomId);
-    this.io.emit("close_room", roomId);
+    this.io.emit(SOCKET_EVENTS.CLOSE_ROOM, roomId);
   }
 
   notifyRoomMemberCount(roomId) {
     const roomMembers = this.getRoomMembers(roomId);
-    this.io.to(roomId).emit("room_member_count", roomMembers.size - 1);
+    this.io
+      .to(roomId)
+      .emit(SOCKET_EVENTS.ROOM_MEMBER_COUNT, roomMembers.size - 1);
   }
 
   notifyActiveRooms() {
     const activeRooms = this.getActiveRooms();
-    this.io.emit("room_list", activeRooms);
+    this.io.emit(SOCKET_EVENTS.ROOM_LIST, activeRooms);
+  }
+
+  setHost(socket) {
+    socket.host = true;
   }
 
   getActiveRooms() {
@@ -57,21 +87,21 @@ class RoomService {
 
 class SignalingService {
   sendOffer(socket, receiverSocketId, sdp) {
-    socket.to(receiverSocketId).emit("offer", {
+    socket.to(receiverSocketId).emit(SOCKET_EVENTS.OFFER, {
       senderSocketId: socket.id,
       sdp,
     });
   }
 
   sendAnswer(socket, senderSocketId, sdp) {
-    socket.to(senderSocketId).emit("answer", {
+    socket.to(senderSocketId).emit(SOCKET_EVENTS.ANSWER, {
       receiverSocketId: socket.id,
       sdp,
     });
   }
 
   sendIceCandidate(socket, targetSocketId, iceCandidate) {
-    socket.to(targetSocketId).emit("ice-candidate", {
+    socket.to(targetSocketId).emit(SOCKET_EVENTS.ICE_CANDIDATE, {
       targetSocketId: socket.id,
       iceCandidate,
     });
@@ -102,7 +132,7 @@ const configureSocket = (server) => {
   const signalingService = new SignalingService();
   const logger = new SocketEventLogger();
 
-  io.on("connection", (socket) => {
+  io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
     logger.logConnection(socket.id);
 
     // 방 관련 이벤트 핸들러
@@ -111,7 +141,7 @@ const configureSocket = (server) => {
     // WebRTC 시그널링 관련 이벤트 핸들러
     setupSignalingEventHandlers(socket, signalingService, logger);
 
-    socket.on("disconnect", () => {
+    socket.on(SOCKET_EVENTS.DISCONNECT, () => {
       logger.logDisconnection(socket.id);
     });
   });
@@ -120,44 +150,43 @@ const configureSocket = (server) => {
 };
 
 const setupRoomEventHandlers = (socket, io, roomService, logger) => {
-  socket.on("join_room", (roomId) => {
-    logger.logEvent("join_room", roomId);
+  socket.on(SOCKET_EVENTS.JOIN_ROOM, (roomId) => {
+    logger.logEvent(SOCKET_EVENTS.JOIN_ROOM, roomId);
     roomService.joinRoom(socket, roomId);
 
     roomService.notifyRoomMemberCount(roomId);
   });
 
-  socket.on("send_room", (roomId) => {
-    logger.logEvent("send_room", roomId);
+  socket.on(SOCKET_EVENTS.SEND_ROOM, (roomId) => {
+    logger.logEvent(SOCKET_EVENTS.SEND_ROOM, roomId);
+
     roomService.createRoom(socket, roomId);
+    roomService.setHost(socket);
+    roomService.notifyActiveRooms();
+  });
 
-    socket.host = true;
+  socket.on(SOCKET_EVENTS.GET_ROOMS, () => {
+    logger.logEvent(SOCKET_EVENTS.GET_ROOMS);
 
     roomService.notifyActiveRooms();
   });
 
-  socket.on("get_rooms", () => {
-    logger.logEvent("get_rooms");
-
-    roomService.notifyActiveRooms();
-  });
-
-  socket.on("close_room", (roomId) => {
-    logger.logEvent("close_room", roomId);
+  socket.on(SOCKET_EVENTS.CLOSE_ROOM, (roomId) => {
+    logger.logEvent(SOCKET_EVENTS.CLOSE_ROOM, roomId);
 
     roomService.closeRoom(roomId);
     roomService.notifyActiveRooms();
   });
 
-  socket.on("leave_room", (roomId) => {
-    logger.logEvent("leave_room", roomId);
+  socket.on(SOCKET_EVENTS.LEAVE_ROOM, (roomId) => {
+    logger.logEvent(SOCKET_EVENTS.LEAVE_ROOM, roomId);
 
     roomService.leaveRoom(socket, roomId);
     roomService.notifyRoomMemberCount(roomId);
   });
 
-  socket.on("disconnecting", () => {
-    logger.logEvent("disconnecting", socket.id);
+  socket.on(SOCKET_EVENTS.DISCONNECTING, () => {
+    logger.logEvent(SOCKET_EVENTS.DISCONNECTING, socket.id);
 
     const joinedRooms = roomService.getJoinedRooms(socket);
 
@@ -174,20 +203,21 @@ const setupRoomEventHandlers = (socket, io, roomService, logger) => {
 };
 
 const setupSignalingEventHandlers = (socket, signalingService, logger) => {
-  socket.on("offer", ({ receiverSocketId, sdp }) => {
-    logger.logEvent("offer", receiverSocketId);
+  socket.on(SOCKET_EVENTS.OFFER, ({ receiverSocketId, sdp }) => {
+    logger.logEvent(SOCKET_EVENTS.OFFER, receiverSocketId);
     signalingService.sendOffer(socket, receiverSocketId, sdp);
   });
 
-  socket.on("answer", ({ senderSocketId, sdp }) => {
-    logger.logEvent("answer", senderSocketId);
+  socket.on(SOCKET_EVENTS.ANSWER, ({ senderSocketId, sdp }) => {
+    logger.logEvent(SOCKET_EVENTS.ANSWER, senderSocketId);
     signalingService.sendAnswer(socket, senderSocketId, sdp);
   });
 
-  socket.on("ice-candidate", ({ socketId, iceCandidate }) => {
-    logger.logEvent("ice-candidate", socketId);
+  socket.on(SOCKET_EVENTS.ICE_CANDIDATE, ({ socketId, iceCandidate }) => {
+    logger.logEvent(SOCKET_EVENTS.ICE_CANDIDATE, socketId);
     signalingService.sendIceCandidate(socket, socketId, iceCandidate);
   });
 };
 
+export { SOCKET_EVENTS };
 export default configureSocket;
