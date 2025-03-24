@@ -17,6 +17,7 @@
     cameraSelect: document.querySelector("#stream-container select"),
     audioToggle: document.getElementById("audio-toggle"),
     videoToggle: document.getElementById("video-toggle"),
+    userCount: document.getElementById("user-count"),
 
     updateCameraOptions(cameras, currentCamera) {
       this.cameraSelect.innerHTML = "";
@@ -51,6 +52,10 @@
 
     updateVideoButtonText(isCameraOff) {
       this.videoToggle.textContent = isCameraOff ? "Video Off" : "Video On";
+    },
+
+    updateUserCount(roomMemberCount) {
+      this.userCount.textContent = `${roomMemberCount} Users`;
     },
   };
 
@@ -214,9 +219,12 @@
     },
 
     registerEvents() {
-      this.socket.on("join_room", (data) =>
-        PeerConnectionManager.handleJoinRoom(data)
-      );
+      this.socket.on("join_room", (data) => {
+        PeerConnectionManager.handleJoinRoom(data);
+      });
+      this.socket.on("room_member_count", (roomMemberCount) => {
+        DOMElements.updateUserCount(roomMemberCount);
+      });
       this.socket.on("answer", (data) =>
         PeerConnectionManager.handleAnswer(data)
       );

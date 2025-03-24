@@ -22,6 +22,16 @@ class RoomService {
     this.io.in(roomId).socketsLeave(roomId);
   }
 
+  notifyRoomMemberCount(roomId) {
+    const roomMembers = this.getRoomMembers(roomId);
+    this.io.to(roomId).emit("room_member_count", roomMembers.size - 1);
+  }
+
+  notifyActiveRooms() {
+    const activeRooms = this.getActiveRooms();
+    this.io.emit("room_list", activeRooms);
+  }
+
   getActiveRooms() {
     const { rooms, sids } = this.io.sockets.adapter;
     const activeRooms = [];
@@ -33,6 +43,10 @@ class RoomService {
     });
 
     return activeRooms;
+  }
+
+  getRoomMembers(roomId) {
+    return this.io.sockets.adapter.rooms.get(roomId);
   }
 }
 
@@ -105,21 +119,21 @@ const setupRoomEventHandlers = (socket, io, roomService, logger) => {
   socket.on("join_room", (roomId) => {
     logger.logEvent("join_room", roomId);
     roomService.joinRoom(socket, roomId);
+
+    roomService.notifyRoomMemberCount(roomId);
   });
 
   socket.on("send_room", (roomId) => {
     logger.logEvent("send_room", roomId);
     roomService.createRoom(socket, roomId);
 
-    const activeRooms = roomService.getActiveRooms();
-    io.emit("room_list", activeRooms);
+    roomService.notifyActiveRooms();
   });
 
   socket.on("get_rooms", () => {
     logger.logEvent("get_rooms");
 
-    const activeRooms = roomService.getActiveRooms();
-    socket.emit("room_list", activeRooms);
+    roomService.notifyActiveRooms();
   });
 
   socket.on("close_room", (roomId) => {
@@ -128,13 +142,14 @@ const setupRoomEventHandlers = (socket, io, roomService, logger) => {
     roomService.closeRoom(roomId);
     io.emit("close_room", roomId);
 
-    const activeRooms = roomService.getActiveRooms();
-    io.emit("room_list", activeRooms);
+    roomService.notifyActiveRooms();
   });
 
   socket.on("leave_room", (roomId) => {
     logger.logEvent("leave_room", roomId);
     roomService.leaveRoom(socket, roomId);
+
+    roomService.notifyRoomMemberCount(roomId);
   });
 };
 
