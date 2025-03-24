@@ -20,6 +20,7 @@ class RoomService {
 
   closeRoom(roomId) {
     this.io.in(roomId).socketsLeave(roomId);
+    this.io.emit("close_room", roomId);
   }
 
   notifyRoomMemberCount(roomId) {
@@ -47,6 +48,10 @@ class RoomService {
 
   getRoomMembers(roomId) {
     return this.io.sockets.adapter.rooms.get(roomId);
+  }
+
+  getJoinedRooms(socket) {
+    return Array.from(socket.rooms).filter((room) => room !== socket.id);
   }
 }
 
@@ -106,7 +111,6 @@ const configureSocket = (server) => {
     // WebRTC 시그널링 관련 이벤트 핸들러
     setupSignalingEventHandlers(socket, signalingService, logger);
 
-    // 연결 해제 이벤트 핸들러
     socket.on("disconnect", () => {
       logger.logDisconnection(socket.id);
     });
@@ -127,6 +131,8 @@ const setupRoomEventHandlers = (socket, io, roomService, logger) => {
     logger.logEvent("send_room", roomId);
     roomService.createRoom(socket, roomId);
 
+    socket.host = true;
+
     roomService.notifyActiveRooms();
   });
 
@@ -140,16 +146,30 @@ const setupRoomEventHandlers = (socket, io, roomService, logger) => {
     logger.logEvent("close_room", roomId);
 
     roomService.closeRoom(roomId);
-    io.emit("close_room", roomId);
-
     roomService.notifyActiveRooms();
   });
 
   socket.on("leave_room", (roomId) => {
     logger.logEvent("leave_room", roomId);
-    roomService.leaveRoom(socket, roomId);
 
+    roomService.leaveRoom(socket, roomId);
     roomService.notifyRoomMemberCount(roomId);
+  });
+
+  socket.on("disconnecting", () => {
+    logger.logEvent("disconnecting", socket.id);
+
+    const joinedRooms = roomService.getJoinedRooms(socket);
+
+    joinedRooms.forEach((roomId) => {
+      if (socket.host) {
+        roomService.closeRoom(roomId);
+        roomService.notifyActiveRooms();
+      } else {
+        roomService.leaveRoom(socket, roomId);
+        roomService.notifyRoomMemberCount(roomId);
+      }
+    });
   });
 };
 
