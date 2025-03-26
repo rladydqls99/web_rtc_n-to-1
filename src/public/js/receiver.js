@@ -22,18 +22,47 @@ class DOMManager {
     this.elements = {
       roomCount: document.getElementById("room-count"),
       streamContainer: document.getElementById("stream-container"),
-      remoteStream: document.querySelector("#stream-container video"),
-      disconnectButton: document.getElementById("disconnect-button"),
       mapContainer: document.getElementById("map"),
     };
-
-    this.setupEventListeners();
   }
 
-  setupEventListeners() {
-    this.elements.disconnectButton.addEventListener("click", () => {
-      RoomManager.leaveCurrentRoom();
+  createVideoElement(roomId) {
+    const videoContainer = document.createElement("div");
+    videoContainer.id = `video-container-${roomId}`;
+    videoContainer.className = "video-container";
+
+    const videoHeader = document.createElement("div");
+    videoHeader.className = "video-header";
+
+    const videoTitle = document.createElement("h2");
+    videoTitle.className = "video-title";
+    videoTitle.textContent = `Room ${roomId}`;
+
+    const videoDisconnectButton = document.createElement("button");
+    videoDisconnectButton.className = "video-disconnect-button";
+    videoDisconnectButton.textContent = "Disconnect";
+    videoDisconnectButton.addEventListener("click", () => {
+      RoomManager.leaveCurrentRoom(roomId);
     });
+
+    const videoWrapper = document.createElement("div");
+    videoWrapper.className = "video-wrapper";
+
+    const video = document.createElement("video");
+    video.id = `video-${roomId}`;
+    video.className = "video";
+    video.autoplay = true;
+    video.playsInline = true;
+
+    videoHeader.appendChild(videoTitle);
+    videoHeader.appendChild(videoDisconnectButton);
+
+    videoWrapper.appendChild(video);
+
+    videoContainer.appendChild(videoHeader);
+    videoContainer.appendChild(videoWrapper);
+
+    this.elements.streamContainer.appendChild(videoContainer);
   }
 
   /**
@@ -55,27 +84,21 @@ class DOMManager {
   }
 
   /**
-   * 스트림 표시 여부 설정
-   * @param {boolean} isVisible - 스트림 표시 여부
-   */
-  setStreamVisibility(isVisible) {
-    this.elements.streamContainer.hidden = !isVisible;
-  }
-
-  /**
    * 원격 스트림 설정
    * @param {MediaStream} stream - 원격 미디어 스트림
    */
-  setRemoteStream(stream) {
-    this.elements.remoteStream.srcObject = stream;
+  setRemoteStream(stream, roomId) {
+    const videoElement = document.getElementById(`video-${roomId}`);
+    videoElement.srcObject = stream;
   }
 
   /**
-   * 스트림 초기화
+   * 비디오 요소 삭제
+   * @param {string} roomId - 방 ID
    */
-  resetStream() {
-    this.elements.remoteStream.srcObject = null;
-    this.elements.streamContainer.hidden = true;
+  deleteVideoElement(roomId) {
+    const videoElement = document.getElementById(`video-container-${roomId}`);
+    videoElement.remove();
   }
 }
 
@@ -163,7 +186,7 @@ class PeerConnectionManagerClass {
 
     peerConnection.ontrack = (event) => {
       const stream = event.streams[0];
-      domManager.setRemoteStream(stream);
+      domManager.setRemoteStream(stream, roomId);
     };
 
     this.peerConnections[roomId] = peerConnection;
@@ -277,9 +300,7 @@ class SocketManagerClass {
    * @param {string} roomId - 방 ID
    */
   handleCloseRoom(roomId) {
-    if (RoomManager.currentRoomId === roomId) {
-      RoomManager.handleRoomClosed();
-    }
+    RoomManager.handleRoomClosed(roomId);
   }
 
   /**
@@ -335,7 +356,7 @@ class SocketManagerClass {
  */
 class RoomManagerClass {
   constructor() {
-    this.currentRoomId = "";
+    this.currentRoomSet = new Set();
   }
 
   /**
@@ -343,35 +364,32 @@ class RoomManagerClass {
    * @param {string} roomId - 방 ID
    */
   joinRoom(roomId) {
-    this.currentRoomId = roomId;
+    this.currentRoomSet.add(roomId);
+
     SocketManager.joinRoom(roomId);
-    domManager.setStreamVisibility(true);
+    domManager.createVideoElement(roomId);
   }
 
   /**
    * 현재 방 퇴장
+   * @param {string} roomId - 방 ID
    */
-  leaveCurrentRoom() {
-    if (!this.currentRoomId) return;
+  leaveCurrentRoom(roomId) {
+    this.currentRoomSet.delete(roomId);
 
-    SocketManager.leaveRoom(this.currentRoomId);
-    this.resetRoomState();
+    domManager.deleteVideoElement(roomId);
+    SocketManager.leaveRoom(roomId);
+    PeerConnectionManager.closeConnection(roomId);
   }
 
   /**
    * 방 종료 처리
    */
-  handleRoomClosed() {
-    this.resetRoomState();
-  }
+  handleRoomClosed(roomId) {
+    this.currentRoomSet.delete(roomId);
 
-  /**
-   * 방 상태 초기화
-   */
-  resetRoomState() {
-    domManager.resetStream();
-    PeerConnectionManager.closeConnection(this.currentRoomId);
-    this.currentRoomId = "";
+    domManager.deleteVideoElement(roomId);
+    PeerConnectionManager.closeConnection(roomId);
   }
 }
 
@@ -386,9 +404,6 @@ const RoomManager = new RoomManagerClass();
  * 애플리케이션 초기화
  */
 function initApp() {
-  // DOM 요소 초기화
-  domManager.setStreamVisibility(false);
-
   // 지도 초기화
   MapManager.initialize();
 

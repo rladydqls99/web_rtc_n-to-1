@@ -24,10 +24,10 @@
       </h1>
     </header>
 
-    <main class="flex-grow container mx-auto px-4 md:px-6 py-4 max-w-5xl">
-      <div class="flex flex-col gap-2">
-        <!-- Room List Section -->
-        <section id="room-list-container" class="flex flex-col gap-4">
+    <main class="flex-grow container mx-auto px-4 md:px-6 py-4">
+      <div class="grid grid-cols-2 gap-4">
+        <!-- Map Section -->
+        <section class="flex flex-col gap-2">
           <div class="flex items-center justify-end">
             <span
               class="px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-medium rounded-full"
@@ -35,33 +35,21 @@
               >0 room</span
             >
           </div>
-        </section>
-
-        <!-- Video Stream Section -->
-        <section id="stream-container">
-          <div class="video-container">
-            <div class="video-header">
-              <h2 class="video-title">Live Stream</h2>
-              <button id="disconnect-button" class="video-close-button">
-                Disconnect
-              </button>
-            </div>
-            <div class="video-wrapper">
-              <video
-                id="remote-stream"
-                class="video"
-                autoplay
-                playsinline
-              ></video>
-            </div>
+          <div
+            class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden"
+          >
+            <div id="map" style="width: 100%; height: 500px"></div>
           </div>
         </section>
 
-        <!-- Map Section -->
-        <section
-          class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden"
-        >
-          <div id="map" style="width: 100%; height: 400px"></div>
+        <!-- Video Stream Section -->
+        <section id="stream-container" class="flex flex-col gap-2">
+          <div class="flex items-center justify-end">
+            <span
+              class="px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-medium rounded-full"
+              >재생 중인 비디오</span
+            >
+          </div>
         </section>
       </div>
     </main>
