@@ -39,39 +39,27 @@
 
         <!-- Video Stream Section -->
         <section id="stream-container">
-          <div
-            class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden"
-          >
-            <div
-              class="flex flex-row justify-between p-4 border-b border-slate-100"
-            >
-              <h2 class="text-lg font-medium text-slate-700">Live Stream</h2>
-              <button
-                id="disconnect-button"
-                class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-6 rounded-lg transition duration-200"
-              >
+          <div class="video-container">
+            <div class="video-header">
+              <h2 class="video-title">Live Stream</h2>
+              <button id="disconnect-button" class="video-close-button">
                 Disconnect
               </button>
             </div>
-            <div class="p-4">
-              <div
-                class="relative bg-slate-900 rounded-lg overflow-hidden"
-                style="aspect-ratio: 16/9"
-              >
-                <video
-                  id="remote-stream"
-                  class="video absolute inset-0 w-full h-full object-cover"
-                  autoplay
-                  playsinline
-                ></video>
-              </div>
+            <div class="video-wrapper">
+              <video
+                id="remote-stream"
+                class="video"
+                autoplay
+                playsinline
+              ></video>
             </div>
           </div>
         </section>
 
         <!-- Map Section -->
         <section
-          class="p-4 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden"
+          class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden"
         >
           <div id="map" style="width: 100%; height: 400px"></div>
         </section>
