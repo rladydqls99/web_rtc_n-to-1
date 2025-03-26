@@ -90,8 +90,9 @@ class RoomService {
 }
 
 class SignalingService {
-  sendOffer(socket, receiverSocketId, sdp) {
+  sendOffer(socket, roomId, receiverSocketId, sdp) {
     socket.to(receiverSocketId).emit(SOCKET_EVENTS.OFFER, {
+      roomId,
       senderSocketId: socket.id,
       sdp,
     });
@@ -207,9 +208,9 @@ const setupRoomEventHandlers = (socket, io, roomService, logger) => {
 };
 
 const setupSignalingEventHandlers = (socket, signalingService, logger) => {
-  socket.on(SOCKET_EVENTS.OFFER, ({ receiverSocketId, sdp }) => {
+  socket.on(SOCKET_EVENTS.OFFER, ({ roomId, receiverSocketId, sdp }) => {
     logger.logEvent(SOCKET_EVENTS.OFFER, receiverSocketId);
-    signalingService.sendOffer(socket, receiverSocketId, sdp);
+    signalingService.sendOffer(socket, roomId, receiverSocketId, sdp);
   });
 
   socket.on(SOCKET_EVENTS.ANSWER, ({ senderSocketId, sdp }) => {

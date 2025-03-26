@@ -22,7 +22,7 @@ class DOMManager {
     this.elements = {
       roomCount: document.getElementById("room-count"),
       streamContainer: document.getElementById("stream-container"),
-      remoteVideo: document.querySelector("#stream-container video"),
+      remoteStream: document.querySelector("#stream-container video"),
       disconnectButton: document.getElementById("disconnect-button"),
       mapContainer: document.getElementById("map"),
     };
@@ -67,14 +67,14 @@ class DOMManager {
    * @param {MediaStream} stream - 원격 미디어 스트림
    */
   setRemoteStream(stream) {
-    this.elements.remoteVideo.srcObject = stream;
+    this.elements.remoteStream.srcObject = stream;
   }
 
   /**
    * 스트림 초기화
    */
   resetStream() {
-    this.elements.remoteVideo.srcObject = null;
+    this.elements.remoteStream.srcObject = null;
     this.elements.streamContainer.hidden = true;
   }
 }
@@ -142,7 +142,7 @@ class MapManagerClass {
  */
 class PeerConnectionManagerClass {
   constructor() {
-    this.connections = {};
+    this.peerConnections = {};
   }
 
   /**
@@ -150,7 +150,7 @@ class PeerConnectionManagerClass {
    * @param {string} senderSocketId - 발신자 소켓 ID
    * @returns {RTCPeerConnection} 생성된 피어 연결
    */
-  async createConnection(senderSocketId) {
+  async createConnection(roomId, senderSocketId) {
     const peerConnection = new RTCPeerConnection({
       iceServers: CONFIG.ICE_SERVERS,
     });
@@ -166,7 +166,8 @@ class PeerConnectionManagerClass {
       domManager.setRemoteStream(stream);
     };
 
-    this.connections[senderSocketId] = peerConnection;
+    this.peerConnections[roomId] = peerConnection;
+
     return peerConnection;
   }
 
@@ -175,11 +176,11 @@ class PeerConnectionManagerClass {
    * @param {string} socketId - 소켓 ID
    */
   closeConnection(socketId) {
-    const connection = this.connections[socketId];
+    const peerConnection = this.peerConnections[socketId];
 
-    if (connection) {
-      connection.close();
-      delete this.connections[socketId];
+    if (peerConnection) {
+      peerConnection.close();
+      delete this.peerConnections[socketId];
     }
   }
 
@@ -189,11 +190,11 @@ class PeerConnectionManagerClass {
    * @param {RTCIceCandidate} candidate - ICE 후보
    */
   async addIceCandidate(socketId, candidate) {
-    const connection = this.connections[socketId];
+    const peerConnection = this.peerConnections[socketId];
 
-    if (connection) {
+    if (peerConnection) {
       try {
-        await connection.addIceCandidate(candidate);
+        await peerConnection.addIceCandidate(candidate);
       } catch (error) {
         console.error(`Error adding ICE candidate: ${error}`);
       }
@@ -205,8 +206,8 @@ class PeerConnectionManagerClass {
    * @param {string} senderSocketId - 발신자 소켓 ID
    * @param {RTCSessionDescription} sdp - SDP 설명
    */
-  async handleOffer(senderSocketId, sdp) {
-    const peerConnection = await this.createConnection(senderSocketId);
+  async handleOffer(roomId, senderSocketId, sdp) {
+    const peerConnection = await this.createConnection(roomId, senderSocketId);
 
     try {
       await peerConnection.setRemoteDescription(sdp);
@@ -251,8 +252,8 @@ class SocketManagerClass {
    * Offer 수신 처리
    * @param {Object} data - 수신 데이터
    */
-  async handleOffer({ senderSocketId, sdp }) {
-    await PeerConnectionManager.handleOffer(senderSocketId, sdp);
+  async handleOffer({ roomId, senderSocketId, sdp }) {
+    await PeerConnectionManager.handleOffer(roomId, senderSocketId, sdp);
   }
 
   /**

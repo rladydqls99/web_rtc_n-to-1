@@ -369,6 +369,7 @@ class SocketManagerClass {
    */
   emitOffer(receiverSocketId, sdp) {
     this.socket.emit("offer", {
+      roomId: RoomManager.getRoomId(),
       receiverSocketId,
       sdp,
     });
@@ -455,6 +456,10 @@ class RoomManagerClass {
 
     domManager.setRoomConnectionFormVisibility(true);
     domManager.setDisConnectButtonVisibility(false);
+  }
+
+  getRoomId() {
+    return this.roomId;
   }
 }
 
