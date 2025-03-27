@@ -45,21 +45,8 @@ web_rtc_n-to-1/
   - Express - 웹 서버 프레임워크
   - Socket.IO - 실시간 양방향 통신
 
-## 프로젝트 의존성
 
-```json
-"dependencies": {
-  "@tailwindcss/cli": "^4.0.14",
-  "express": "^4.21.2",
-  "socket.io": "^4.8.1",
-  "tailwindcss": "^4.0.14"
-},
-"devDependencies": {
-  "nodemon": "^3.1.9"
-}
-```
-
-### 주요 요구사항
+## 주요 요구사항
 
 - Node.js 22.14.0
 - PNPM 10.5.1 (패키지 관리자)
