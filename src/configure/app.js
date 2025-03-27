@@ -28,6 +28,13 @@ const configureApp = (app) => {
     res.sendFile(path.join(VIEWS_DIR, "sender.html"));
   });
 
+  // 환경 변수 API 설정
+  app.get("/api/config", (req, res) => {
+    res.json({
+      KAKAO_MAP_API_KEY: process.env.KAKAO_MAP_API_KEY || ''
+    });
+  });
+
   // 404 페이지 처리
   app.use((req, res) => {
     res.status(404).sendFile(path.join(VIEWS_DIR, "404.html"));

@@ -1,7 +1,11 @@
 import http from "http";
 import express from "express";
+import dotenv from "dotenv";
 import configureApp from "./configure/app.js";
 import configureSocket from "./configure/socket.js";
+
+// 환경 변수 로드
+dotenv.config();
 
 const PORT = process.env.PORT || 3000;
 

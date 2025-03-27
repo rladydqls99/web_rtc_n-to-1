@@ -1,5 +1,23 @@
 "use strict";
 
+// API 키 관리
+export const API_KEYS = {
+  KAKAO_MAP: ''
+};
+
+// API 키 로드 함수
+export async function loadApiKeys() {
+  try {
+    const response = await fetch('/api/config');
+    const config = await response.json();
+    API_KEYS.KAKAO_MAP = config.KAKAO_MAP_API_KEY;
+    return config;
+  } catch (error) {
+    console.error('API 키 로드 오류:', error);
+    return {};
+  }
+}
+
 // WebRTC 및 미디어 관련 설정
 export const CONFIG = {
   ICE_SERVERS: [
